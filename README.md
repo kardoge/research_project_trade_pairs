@@ -5,7 +5,7 @@
 
 ## Introduction
 
-The concept of pairs trading, of which two related stocks are chosen based on appropriate modelling and forecasting of their time series data and an appropriate choice of distance measure to observe relative departures from their equilibrium, can create a relatively successful trading strategy through statistical arbitrage as a long/short dollar-neutral portfolio is chosen<sup>1</sup>. The research performed by Nicolas Huck and Komivi Afawubo, look to evaluate the effectiveness of cointegration over common distance methods in choosing such pairs. With mentions on generating high and stable returns robust to transaction costs. The purpose of this project is to compare such methods performed on historical data and assess reproducibility across aggregated pricing data.
+The concept of pairs trading, of which two related stocks are chosen based on appropriate modelling and forecasting of their time series data and an appropriate choice of distance measure to observe relative departures from their equilibrium, can create a relatively successful trading strategy through statistical arbitrage as a long/short dollar-neutral portfolio is chosen<sup>1</sup>. Huck and Afawubo (2015) evaluate whether cointegration selects better pairs than the common distance method, and report high, stable returns that are robust to transaction costs. The purpose of this project is to compare such methods performed on historical data and assess reproducibility across aggregated pricing data.
 
 ### Pairs Selection 
 
@@ -42,6 +42,8 @@ $$
 
 
 ### 2. Stationarity of the Price Ratio (ADF test)
+
+*Described for completeness; this method is not implemented in this project (see "How this project implements it" below).*
 
 • A tradable pair needs a price ratio y with constant mean and variance.
 • Test with an Augmented Dickey–Fuller regression, no trend, with up to 10 lags chosen so the residuals are serially uncorrelated:
@@ -119,11 +121,34 @@ $$
 S_t = P_t^i - \hat{\beta} \, P_t^j - \hat{\mu}
 $$
 
-Regress one price on the other, then ADF-test the residuals.
+
 • The paper uses Johansen instead. It is a likelihood-ratio test in a VAR, with trace and maximum-eigenvalue statistics. It avoids Engle–Granger's asymmetry: the result does not depend on which stock is the dependent variable. Lag length (up to 10) is set by an LR test.
 • The cointegrated pairs with the highest trace statistics (1% significance) are eligible.
 • Trade when P1 − βP2 departs from its mean μ by more than k SDs.
-• Cointegration vs correlation: the selected pairs have lower return correlation (about 0.33, against about 0.55 for distance pairs) and higher spread volatility. Mean reversion, not co-movement, is what is being selected.
+• Cointegration vs correlation: Huck and Afawubo report that cointegration-selected pairs have lower return correlation (about 0.33, against about 0.55 for distance pairs) and higher spread volatility.
+
+### How this project implements it
+
+The methods above follow the literature. The code differs in several ways, so results here
+are not a direct replication of Huck and Afawubo (2015):
+
+| | Methods described above | This project (`pairs/`) |
+|---|---|---|
+| Selection methods | Distance, price-ratio ADF, cointegration | Distance, **correlation**, Engle–Granger, Johansen, and a **composite** rank. The price-ratio ADF method is not implemented |
+| Prices | Normalised total-return prices | Log adjusted-close prices (Yahoo `auto_adjust=True`, so dividends are included) |
+| Distance | SSD of normalised prices, traded 1:1 | SSD of prices rebased to 1 (`stats.distance_ssd`), used **only to rank pairs** |
+| Correlation | Not described | Correlation of daily log returns over the formation window |
+| Engle–Granger | OLS, then ADF on residuals | `statsmodels.coint` run in **both directions**; the lower p-value is kept, doubled, then Benjamini–Hochberg corrected across all pairs |
+| Johansen | Lag length up to 10, chosen by LR test | **Fixed lag** (`k_ar_diff=1`), constant term; ranked by trace statistic ÷ its 95% critical value |
+| Significance | 1% | **5%**, after the Benjamini–Hochberg correction |
+| "Eligible" pair | Passes the cointegration test | Passes all four: BH-adjusted EG p < 0.05, Johansen ratio > 1, half-life of 1–60 days, Hurst < 0.5 |
+| Trading rule | Each method trades its own spread (1:1 for distance, β for cointegration) | **Every method trades the same way**: OLS hedge ratio on log prices fitted in the formation window, then a z-score rule (enter ±2σ, exit ±0.5σ, stop ±4σ) |
+| Costs | — | 5 bps per unit of gross exposure traded; positions closed at the end of each trading block |
+| Pairs per method | Top 20 (Gatev et al.) | Top 3, equal-weighted |
+| Re-selection | Monthly | Walk-forward: 504-day formation, 126-day trading block (25 windows); plus one 67/33 single split |
+
+Because every method trades the same rule, differences in results come **only from which
+pairs each method selects**.
 
 Find, compare and backtest stock pairs for statistical-arbitrage pairs trading.
 The tool tests every pair in a universe of stocks with several selection methods,
