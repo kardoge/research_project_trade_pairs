@@ -5,7 +5,7 @@
 
 ## Introduction
 
-The concept of pairs trading, of which two related stocks are chosen based on appropriate modelling and forecasting of their time series data and an appropriate choice of distance measure to observe relative departures from their equilibrium, can create a relatively successful trading strategy through statistical arbitrage as a long/short doller-neutral portfolio is chosen<sup>1</sup>. The research performed by Nicolas Husk and Komivi Afawubo, look to evaluate the effectiveness of cointigration over common distance methods in choosing such pairs. With mentions on generating high and stable returns robust to transaction costs. The purpose of this project is to compare such methods performed on historical data and assess reporducability across aggregated pricing data.
+The concept of pairs trading, of which two related stocks are chosen based on appropriate modelling and forecasting of their time series data and an appropriate choice of distance measure to observe relative departures from their equilibrium, can create a relatively successful trading strategy through statistical arbitrage as a long/short dollar-neutral portfolio is chosen<sup>1</sup>. The research performed by Nicolas Huck and Komivi Afawubo, look to evaluate the effectiveness of cointegration over common distance methods in choosing such pairs. With mentions on generating high and stable returns robust to transaction costs. The purpose of this project is to compare such methods performed on historical data and assess reproducibility across aggregated pricing data.
 
 ### Pairs Selection 
 
@@ -135,10 +135,10 @@ ranks them, and picks the best pair. Each method is then judged **out of sample*
 pip install -r requirements.txt
 
 # Real data from Yahoo Finance (default universe: sector-matched US large caps)
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --out results/all_pairs_14
+python -m pairs --start 2012-01-01 --end xxxxx --walk-forward --out xxxx
 
 # Your own tickers
-python -m pairs --tickers KO PEP XOM CVX V MA --start 2012-01-01 --end 2026-10-31
+python -m pairs --tickers KO PEP XOM CVX V MA --start 2012-01-01 --end xxxx
 
 # Your own data: a wide CSV with a date column and one price column per ticker
 python -m pairs --source csv --csv data/prices.csv
@@ -151,7 +151,7 @@ python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward
 python -m pairs --source synthetic --synthetic-days 2500 --walk-forward
 
 # Only test pairs within the same sector (recommended)
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out results/sector_14
+python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out xxxx
 python -m pairs --tickers ... --sector-file sectors.csv   # CSV columns: ticker,sector
 
 pytest -q
@@ -175,195 +175,60 @@ Results go to `output/`:
 
 Ensure consistent end dates when performing any of the analysis such as walk_forward on same sector. The following modules and their versions were used during this analysis:
 
-numpy>=1.26
-pandas>=2.1
-scipy>=1.11
-statsmodels>=0.14
-matplotlib>=3.8
-yfinance>=0.2.40
-pytest>=8
+Python 3.13.5
+matplotlib==3.10.0
+yfinance==1.7.0
 
-2012-01-01 --end 2026-10-31
+python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out results/sector_14
+python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --out results/all_pairs_14
 
-## Results: All pairs - 91 candidate pairs 
+## Results
 
-14 tickers, 3729 days (2012-01-03 → 2026-10-30); split at 2021-12-06
+### Walk Forward (Main Result) (`walk_forward_summary.csv`):
 
-### Method Comparison - Top 3 Pairs Each, Out of Sample (`method_comparison.csv`):
-
-### Pair Statistics (Formation Window), Best First
-
-| Pair | Eligible | Score | EG p-value | EG p-value (BH) | Johansen Ratio | Half-Life | Hurst | Crossings/yr | Return Corr | SSD |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PEP/HD | False | 0.976 | 0.004 | 0.174 | 1.410 | 41.052 | 0.441 | 13.417 | 0.545 | 22999.585 |
-| KO/MSFT | False | 0.941 | 0.002 | 0.174 | 1.526 | 42.899 | 0.462 | 12.913 | 0.413 | 45641.988 |
-| KO/HD | False | 0.938 | 0.015 | 0.344 | 1.370 | 45.609 | 0.452 | 12.408 | 0.453 | 30913.010 |
-| KO/GOOGL | False | 0.923 | 0.028 | 0.429 | 1.161 | 51.224 | 0.450 | 11.500 | 0.374 | 10915.195 |
-| KO/V | False | 0.919 | 0.012 | 0.315 | 1.669 | 42.137 | 0.468 | 11.299 | 0.472 | 35112.613 |
-| HD/GOOGL | False | 0.914 | 0.007 | 0.238 | 1.071 | 63.093 | 0.445 | 11.904 | 0.477 | 6218.442 |
-| KO/PEP | False | 0.899 | 0.003 | 0.174 | 1.207 | 47.759 | 0.456 | 9.382 | 0.709 | 613.016 |
-| LOW/GOOGL | False | 0.888 | 0.029 | 0.429 | 1.045 | 59.685 | 0.452 | 10.592 | 0.417 | 3133.174 |
-| PEP/LOW | False | 0.874 | 0.035 | 0.429 | 0.991 | 58.387 | 0.452 | 10.189 | 0.433 | 17051.793 |
-| KO/LOW | False | 0.857 | 0.060 | 0.490 | 1.118 | 60.252 | 0.457 | 10.996 | 0.373 | 23794.100 |
-| KO/MA | False | 0.845 | 0.030 | 0.429 | 1.549 | 45.630 | 0.471 | 8.171 | 0.488 | 41665.392 |
-| KO/JPM | False | 0.837 | 0.032 | 0.429 | 1.123 | 61.839 | 0.474 | 10.290 | 0.470 | 7789.759 |
-| PEP/GOOGL | False | 0.835 | 0.041 | 0.443 | 0.833 | 62.582 | 0.458 | 10.693 | 0.409 | 6710.381 |
-| CVX/BAC | False | 0.802 | 0.038 | 0.429 | 1.168 | 65.947 | 0.488 | 10.290 | 0.583 | 28147.389 |
-| V/PEP | False | 0.791 | 0.130 | 0.513 | 0.870 | 60.083 | 0.466 | 12.307 | 0.472 | 26725.669 |
-
-### Method Comparison - Top 3 Pairs Each, Out of Sample
-
-| Method | Pairs | Mean Sharpe | Mean Return | Worst Drawdown | Trades |
-|---|---|---|---|---|---|
-| composite | PEP/HD, KO/MSFT, KO/HD | -0.163 | -0.017 | -0.214 | 8 |
-| engle_granger | BAC/JPM, KO/MSFT, KO/PEP | -0.213 | -0.063 | -0.214 | 6 |
-| correlation | BAC/JPM, V/MA, CVX/XOM | -0.400 | -0.069 | -0.212 | 3 |
-| johansen | KO/V, KO/MA, KO/MSFT | -0.582 | -0.107 | -0.214 | 4 |
-| distance | CVX/XOM, PEP/UPS, CVX/KO | -0.786 | -0.166 | -0.212 | 3 |
-
-> **Note:** No pair passes all filters; the best pair shown is the top-scoring ineligible
-
-### Best Pair (Out-of-Sample)
-
-**PEP/HD** — long 1 PEP / short 0.52 HD
-
-| Statistic | Value |
-|---|---|
-| Engle-Granger p-value | 0.0038 (BH-adjusted: 0.1738) |
-| Johansen ratio | 1.41 |
-| Half-life | 41.1 days |
-| Hurst exponent | 0.44 |
-| Sharpe (OOS) | 0.66 |
-| Return (OOS) | 21.2% |
-| Max Drawdown (OOS) | -10.2% |
-| Trades | 5 |
-
-### Walk-forward performance by method (`walk_forward_summary.csv`)
-
-| Method | Sharpe | Total Return | Max Drawdown | % Windows Positive | Mean Window Sharpe | Trades | % Picks Eligible |
+| Method | Sharpe: sector (7) | Sharpe: all (91) | Return: sector | Return: all | Max DD: sector | Max DD: all | Trades: sector / all |
 |---|---|---|---|---|---|---|---|
-| correlation | 0.549 | 0.184 | -0.051 | 0.640 | 0.665 | 72 | 0.013 |
-| distance | 0.446 | 0.233 | -0.088 | 0.560 | 0.446 | 84 | 0.000 |
-| composite | 0.402 | 0.310 | -0.142 | 0.640 | 0.515 | 92 | 0.080 |
-| johansen | -0.122 | -0.114 | -0.195 | 0.600 | 0.211 | 81 | 0.040 |
-| engle_granger | -0.244 | -0.181 | -0.240 | 0.440 | -0.040 | 79 | 0.080 |
-| eligible_only | -0.289 | -0.058 | -0.066 | 0.040
+| distance | 0.45 | 0.45 | +16.1% | +23.3% | −6.2% | −8.8% | 71 / 84 |
+| correlation | 0.43 | 0.55 | +14.7% | +18.4% | −5.1% | −5.1% | 71 / 72 |
+| johansen | 0.33 | −0.12 | +13.6% | −11.4% | −7.5% | −19.5% | 71 / 81 |
+| composite | 0.21 | 0.40 | +9.0% | +31.0% | −9.0% | −14.2% | 76 / 92 |
+| engle_granger | 0.01 | −0.24 | −0.0% | −18.1% | −11.3% | −24.0% | 68 / 79 |
+| eligible_only | −0.24 | −0.29 | −4.2% | −5.8% | −5.8% | −6.6% | 3 / 5 |
 
-### Composite Top Pick in Each Window — All Pairs (91 candidates)
+### Single Split (One Formation/Trading Split, Top 3 Pairs Each)
 
-| Window | Pair | Eligible | Sharpe | Total Return | Trades |
-|---|---|---|---|---|---|
-| 1 | XOM/GOOGL | False | 1.025 | 0.031 | 3 |
-| 2 | LOW/BAC | False | -1.451 | -0.061 | 1 |
-| 3 | JPM/MSFT | False | 0.068 | 0.001 | 2 |
-| 4 | MA/V | False | 0.000 | 0.000 | 0 |
-| 5 | MA/V | True | -1.694 | -0.029 | 1 |
-| 6 | JPM/MA | False | -1.434 | -0.036 | 1 |
-| 7 | V/GOOGL | False | -0.616 | -0.017 | 1 |
-| 8 | GOOGL/MSFT | True | 0.000 | 0.000 | 0 |
-| 9 | CVX/UPS | False | -0.664 | -0.034 | 1 |
-| 10 | GOOGL/HD | False | 1.465 | 0.038 | 1 |
-| 11 | V/MSFT | False | 0.000 | 0.000 | 0 |
-| 12 | GOOGL/LOW | False | -1.836 | -0.002 | 1 |
-| 13 | MA/V | False | 1.586 | 0.017 | 1 |
-| 14 | V/MA | False | 1.345 | 0.029 | 2 |
-| 15 | V/PEP | False | -0.692 | -0.023 | 2 |
-| 16 | PEP/UPS | True | -1.344 | -0.067 | 1 |
-| 17 | MA/FDX | False | 3.289 | 0.197 | 2 |
-| 18 | MA/JPM | False | 1.300 | 0.088 | 1 |
-| 19 | MA/JPM | False | -0.260 | -0.011 | 1 |
-| 20 | MA/FDX | False | 0.761 | 0.034 | 2 |
-| 21 | V/JPM | False | -1.047 | -0.013 | 1 |
-| 22 | LOW/JPM | False | 1.066 | 0.069 | 1 |
-| 23 | FDX/UPS | True | -1.000 | -0.107 | 1 |
-| 24 | GOOGL/BAC | False | -2.232 | -0.049 | 1 |
-| 25 | PEP/V | False | 0.393 | 0.012 | 2 |
-
-## Results: Same-sector pairs (14 tickers: KO, PEP, V, MA, BAC, JPM, HD, LOW, GOOGL, MSFT, CVX, XOM, FDX, UPS)
-
-### Method Comparison - Top 3 Pairs Each, Out of Sample (`method_comparison.csv`):
-
-| Method | Pairs | Mean Sharpe | Mean Return | Worst Drawdown | Trades |
-|---|---|---|---|---|---|
-| engle_granger | BAC/JPM, KO/PEP, V/MA | -0.022 | -0.005 | -0.076 | 4 |
-| johansen | BAC/JPM, KO/PEP, V/MA | -0.022 | -0.005 | -0.076 | 4 |
-| composite | KO/PEP, V/MA, BAC/JPM | -0.022 | -0.005 | -0.076 | 4 |
-| correlation | BAC/JPM, V/MA, CVX/XOM | -0.400 | -0.069 | -0.212 | 3 |
-| distance | CVX/XOM, KO/PEP, V/MA | -0.422 | -0.072 | -0.212 | 3 |
-
-### Best Pair (Out-of-Sample) (`pairs_stats.csv`):
-
-**KO/PEP** — long 1 KO / short 0.65 PEP
-
-| Statistic | Value |
-|---|---|
-| Engle-Granger p-value | 0.0032 (BH-adjusted: 0.0224) |
-| Johansen ratio | 1.21 |
-| Half-life | 47.8 days |
-| Hurst exponent | 0.46 |
-| Sharpe (OOS) | -0.07 |
-| Return (OOS) | -1.2% |
-| Max Drawdown (OOS) | -7.6% |
-| Trades | 2 |
-
-### Walk-forward performance by method (`walk_forward_summary.csv`):
-
-| Method | Sharpe | Total Return | Max Drawdown | % Windows Positive | Mean Window Sharpe | Trades | % Picks Eligible |
-|---|---|---|---|---|---|---|---|
-| distance | 0.454 | 0.161 | -0.062 | 0.720 | 0.682 | 71 | 0.000 |
-| correlation | 0.433 | 0.147 | -0.051 | 0.640 | 0.575 | 71 | 0.013 |
-| johansen | 0.332 | 0.136 | -0.075 | 0.480 | 0.378 | 71 | 0.053 |
-| composite | 0.206 | 0.090 | -0.090 | 0.520 | 0.367 | 76 | 0.053 |
-| engle_granger | 0.015 | -0.000 | -0.113 | 0.480 | 0.033 | 68 | 0.053 |
-| eligible_only | -0.242 | -0.042 | -0.058 | 0.040 | -0.089 | 3 | 1.000 |
-
-### Composite Top Pick in Each Window (`walk_forward_windows.csv`)
-
-| Window | Pair | Eligible | Sharpe | Total Return | Trades |
-|---|---|---|---|---|---|
-| 1 | KO/PEP | False | 0.000 | 0.000 | 0 |
-| 2 | KO/PEP | False | 2.597 | 0.091 | 2 |
-| 3 | KO/PEP | False | 0.208 | 0.003 | 1 |
-| 4 | MA/V | False | 0.000 | 0.000 | 0 |
-| 5 | MA/V | True | -1.694 | -0.029 | 1 |
-| 6 | PEP/KO | False | -2.066 | -0.028 | 1 |
-| 7 | XOM/CVX | False | -0.102 | -0.004 | 1 |
-| 8 | GOOGL/MSFT | True | 0.000 | 0.000 | 0 |
-| 9 | GOOGL/MSFT | False | -0.278 | -0.008 | 2 |
-| 10 | BAC/JPM | False | -1.377 | -0.027 | 1 |
-| 11 | V/MA | False | 2.089 | 0.029 | 1 |
-| 12 | V/MA | False | 0.000 | 0.000 | 0 |
-| 13 | MA/V | False | 1.586 | 0.017 | 1 |
-| 14 | V/MA | False | 1.345 | 0.029 | 2 |
-| 15 | MA/V | False | 1.536 | 0.028 | 2 |
-| 16 | CVX/XOM | True | 0.479 | 0.005 | 1 |
-| 17 | CVX/XOM | False | -2.671 | -0.048 | 1 |
-| 18 | MA/V | False | 0.000 | 0.000 | 0 |
-| 19 | MA/V | False | 0.000 | 0.000 | 0 |
-| 20 | MA/V | False | 2.621 | 0.025 | 1 |
-| 21 | MA/V | False | 2.139 | 0.020 | 1 |
-| 22 | MA/V | False | -1.055 | -0.018 | 1 |
-| 23 | FDX/UPS | True | -1.000 | -0.107 | 1 |
-| 24 | CVX/XOM | False | 0.000 | 0.000 | 0 |
-| 25 | PEP/KO | False | 0.444 | 0.033 | 1 |
-
+| Method | Picks: sector | Mean Sharpe: sector | Picks: all pairs | Mean Sharpe: all |
+|---|---|---|---|---|
+| engle_granger | BAC/JPM, KO/PEP, V/MA | −0.02 | BAC/JPM, KO/MSFT, KO/PEP | −0.21 |
+| johansen | BAC/JPM, KO/PEP, V/MA | −0.02 | KO/V, KO/MA, KO/MSFT | −0.58 |
+| composite | KO/PEP, V/MA, BAC/JPM | −0.02 | PEP/HD, KO/MSFT, KO/HD | −0.16 |
+| correlation | BAC/JPM, V/MA, CVX/XOM | −0.40 | BAC/JPM, V/MA, CVX/XOM | −0.40 |
+| distance | CVX/XOM, KO/PEP, V/MA | −0.42 | CVX/XOM, PEP/UPS, CVX/KO | −0.79 |
 
 ## Findings
 
-1. **Simple methods beat statistical ones again.** Distance and correlation have the highest performance by Sharpe, total return, and win rate. Whether those differences are significant are discussed in **EVALUATION SECTION**  — Engle-Granger and eligible_only are the weakest.
+Both experiments use the same 14 stocks, dates and strategy settings; they differ only in
+whether candidate pairs are restricted to the same sector (7 pairs) or not (91 pairs).
 
-2. **The top pick is highly stable in this small universe.** From `walk_forward_picks.csv`, composite's top pair across the 25 windows was:
-   - **MA/V**: 12 windows
-   - **KO/PEP**: 5 windows
-   - **CVX/XOM**: 4 windows
-   - **GOOGL/MSFT**, **BAC/JPM**, **FDX/UPS**: 1–2 windows each
+1. **No selection method has a Sharpe ratio reliably above zero.** Walk-forward Sharpe ratios
+   range from −0.29 to 0.55, and every 95% bootstrap confidence interval includes zero.
+2. **Within the same-sector universe the methods cannot be told apart.** Distance (0.45) and
+   correlation (0.43) have the highest Sharpe ratios, but their differences from the
+   cointegration methods are well within the bootstrap uncertainty.
+3. **Testing all pairs hurts the cointegration methods.** With 91 candidates, Engle–Granger and
+   Johansen pick cross-sector pairs 85–87% of the time (e.g. KO/MSFT, PEP/HD), and their Sharpe
+   ratios fall to −0.24 and −0.12. In the all-pairs run, distance outperforms Engle–Granger by
+   0.69 Sharpe (95% CI 0.11 to 1.29).
+4. **Multiple testing explains why.** 19 of 91 pairs pass Engle–Granger at p < 0.05, but none
+   survive the Benjamini–Hochberg correction. Restricting to economically related pairs reduces
+   false discoveries.
+5. **Correlation is barely affected by the sector filter** because it picks same-sector pairs
+   96% of the time on its own.
+6. **Passing every statistical filter did not predict success.** Eligible pairs were rare
+   (0–8% of picks) and still produced large losses, e.g. FDX/UPS in window 23 (−10.7%).
 
-   This matches the 14-ticker same-sector result, suggesting the stable pick is driven by the sector structure, not the specific universe size.
-
-3. **Eligible picks are rare and not obviously better.** Only 0–5.3% of picks were eligible and passed every filter for most methods. The one clear eligible pick that produced a large loss was **FDX/UPS in window 23** (−10.7%, matching the earlier 14-ticker run's finding) — the same cautionary example recurs even in this smaller universe.
-
-4. **Composite's extra trades didn't help.** Composite made 76 trades (vs. 71 for distance/correlation) but had a lower Sharpe and the worst drawdown (−9.0%) of the non-eligible methods — again echoing the broader 14-ticker conclusion that added statistical filtering doesn't translate into better risk-adjusted returns.
-
+Limitations: 14 hand-picked large caps (survivorship and hindsight bias), 25 windows, a
+single parameter setting, and a simplified cost model. See the roadmap for next steps.
 
 ## References
 
