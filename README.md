@@ -135,10 +135,10 @@ ranks them, and picks the best pair. Each method is then judged **out of sample*
 pip install -r requirements.txt
 
 # Real data from Yahoo Finance (default universe: sector-matched US large caps)
-python -m pairs --start 2012-01-01
+python -m pairs --start 2012-01-01 --end 2026-10-31
 
 # Your own tickers
-python -m pairs --tickers KO PEP XOM CVX V MA --start 2015-01-01
+python -m pairs --tickers KO PEP XOM CVX V MA --start 2012-01-01 --end 2026-10-31
 
 # Your own data: a wide CSV with a date column and one price column per ticker
 python -m pairs --source csv --csv data/prices.csv
@@ -147,7 +147,7 @@ python -m pairs --source csv --csv data/prices.csv
 python -m pairs --source synthetic
 
 # Add a rolling walk-forward comparison of the methods
-python -m pairs --start 2012-01-01 --walk-forward
+python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward
 python -m pairs --source synthetic --synthetic-days 2500 --walk-forward
 
 # Only test pairs within the same sector (recommended)
@@ -171,54 +171,104 @@ Results go to `output/`:
 | `walk_forward_returns.csv` | daily out-of-sample returns, one column per method |
 | `walk_forward.png` | out-of-sample equity curve for each method |
 
-```bash
-python -m pairs --start 2012-01-01 --walk-forward --out output_all
-python -m pairs --start 2012-01-01 --walk-forward --same-sector --out output_sector
-```
 
-## Results: Same-sector pairs (6 tickers: KO, PEP, XOM, CVX, V, MA)
+## Results: Same-sector pairs (14 tickers: KO, PEP, V, MA, BAC, JPM, HD, LOW, GOOGL, MSFT, CVX, XOM, FDX, UPS)
 
-### Single-split comparison (`method_comparison.csv`)
+### Method Comparison - Top 3 Pairs Each, Out of Sample (`method_comparison.csv`):
 
-All five methods converge on the same top-3 pairs — **MA/V, KO/PEP, CVX/XOM** — so every method produces identical performance on this one split:
-
-| Metric | Value |
-|---|---|
-| Mean Sharpe | 0.01 |
-| Mean return | +1.4% |
-| Worst drawdown | −5.8% |
-| Trades | 5 |
-
-With only 3 candidate pairs in a 6-ticker, same-sector universe, there's no room for the methods to disagree — a single split can't distinguish selection quality here. This motivates the walk-forward test.
-
-### Walk-forward performance by method (`walk_forward_summary.csv`)
-
-| Method | Sharpe | Total Return | Max DD | % Positive Windows | Trades |
+| Method | Pairs | Mean Sharpe | Mean Return | Worst Drawdown | Trades |
 |---|---|---|---|---|---|
-| distance | 0.45 | +16.1% | −6.2% | 72% | 71 |
-| correlation | 0.43 | +14.7% | −5.1% | 64% | 71 |
-| johansen | 0.33 | +13.6% | −7.5% | 48% | 71 |
-| composite | 0.21 | +9.0% | −9.0% | 52% | 76 |
-| engle_granger | 0.01 | −0.0% | −11.3% | 48% | 68 |
-| eligible_only | −0.24 | −4.2% | −5.8% | 4% | 3 |
+| engle_granger | BAC/JPM, KO/PEP, V/MA | -0.022 | -0.005 | -0.076 | 4 |
+| johansen | BAC/JPM, KO/PEP, V/MA | -0.022 | -0.005 | -0.076 | 4 |
+| composite | KO/PEP, V/MA, BAC/JPM | -0.022 | -0.005 | -0.076 | 4 |
+| correlation | BAC/JPM, V/MA, CVX/XOM | -0.400 | -0.069 | -0.212 | 3 |
+| distance | CVX/XOM, KO/PEP, V/MA | -0.422 | -0.072 | -0.212 | 3 |
+
+### Best Pair (Out-of-Sample) (`pairs_stats.csv`):
+
+**KO/PEP** — long 1 KO / short 0.65 PEP
+
+| Statistic | Value |
+|---|---|
+| Engle-Granger p-value | 0.0032 (BH-adjusted: 0.0224) |
+| Johansen ratio | 1.21 |
+| Half-life | 47.8 days |
+| Hurst exponent | 0.46 |
+| Sharpe (OOS) | -0.07 |
+| Return (OOS) | -1.2% |
+| Max Drawdown (OOS) | -7.6% |
+| Trades | 2 |
+
+### Walk-forward performance by method (`walk_forward_summary.csv`):
+
+| Method | Sharpe | Total Return | Max Drawdown | % Windows Positive | Mean Window Sharpe | Trades | % Picks Eligible |
+|---|---|---|---|---|---|---|---|
+| distance | 0.454 | 0.161 | -0.062 | 0.720 | 0.682 | 71 | 0.000 |
+| correlation | 0.433 | 0.147 | -0.051 | 0.640 | 0.575 | 71 | 0.013 |
+| johansen | 0.332 | 0.136 | -0.075 | 0.480 | 0.378 | 71 | 0.053 |
+| composite | 0.206 | 0.090 | -0.090 | 0.520 | 0.367 | 76 | 0.053 |
+| engle_granger | 0.015 | -0.000 | -0.113 | 0.480 | 0.033 | 68 | 0.053 |
+| eligible_only | -0.242 | -0.042 | -0.058 | 0.040 | -0.089 | 3 | 1.000 |
+
+### Composite Top Pick in Each Window (`walk_forward_windows.csv`)
+
+| Window | Pair | Eligible | Sharpe | Total Return | Trades |
+|---|---|---|---|---|---|
+| 1 | KO/PEP | False | 0.000 | 0.000 | 0 |
+| 2 | KO/PEP | False | 2.597 | 0.091 | 2 |
+| 3 | KO/PEP | False | 0.208 | 0.003 | 1 |
+| 4 | MA/V | False | 0.000 | 0.000 | 0 |
+| 5 | MA/V | True | -1.694 | -0.029 | 1 |
+| 6 | PEP/KO | False | -2.066 | -0.028 | 1 |
+| 7 | XOM/CVX | False | -0.102 | -0.004 | 1 |
+| 8 | GOOGL/MSFT | True | 0.000 | 0.000 | 0 |
+| 9 | GOOGL/MSFT | False | -0.278 | -0.008 | 2 |
+| 10 | BAC/JPM | False | -1.377 | -0.027 | 1 |
+| 11 | V/MA | False | 2.089 | 0.029 | 1 |
+| 12 | V/MA | False | 0.000 | 0.000 | 0 |
+| 13 | MA/V | False | 1.586 | 0.017 | 1 |
+| 14 | V/MA | False | 1.345 | 0.029 | 2 |
+| 15 | MA/V | False | 1.536 | 0.028 | 2 |
+| 16 | CVX/XOM | True | 0.479 | 0.005 | 1 |
+| 17 | CVX/XOM | False | -2.671 | -0.048 | 1 |
+| 18 | MA/V | False | 0.000 | 0.000 | 0 |
+| 19 | MA/V | False | 0.000 | 0.000 | 0 |
+| 20 | MA/V | False | 2.621 | 0.025 | 1 |
+| 21 | MA/V | False | 2.139 | 0.020 | 1 |
+| 22 | MA/V | False | -1.055 | -0.018 | 1 |
+| 23 | FDX/UPS | True | -1.000 | -0.107 | 1 |
+| 24 | CVX/XOM | False | 0.000 | 0.000 | 0 |
+| 25 | PEP/KO | False | 0.444 | 0.033 | 1 |
+
+## Reproduceable Results 
+
+Ensure consistent end dates when performing any of the analysis such as walk_forward on same sector. The following modules and their versions were used during this analysis:
+
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+statsmodels>=0.14
+matplotlib>=3.8
+yfinance>=0.2.40
+pytest>=8
+
+2012-01-01 --end 2026-10-31
 
 ### Findings
 
-1. **Simple methods beat statistical ones again.** Distance and correlation are the top two performers by Sharpe, total return, and win rate — consistent with the 14-ticker run. Engle-Granger and eligible_only are the weakest.
+1. **Simple methods beat statistical ones again.** Distance and correlation have the highest performance by Sharpe, total return, and win rate. Whether those differences are significant are discussed in **EVALUATION SECTION**  — Engle-Granger and eligible_only are the weakest.
 
 2. **The top pick is highly stable in this small universe.** From `walk_forward_picks.csv`, composite's top pair across the 25 windows was:
    - **MA/V**: 12 windows
    - **KO/PEP**: 5 windows
    - **CVX/XOM**: 4 windows
-   - GOOGL/MSFT, BAC/JPM, FDX/UPS: 1–2 windows each
+   - **GOOGL/MSFT**, **BAC/JPM**, **FDX/UPS**: 1–2 windows each
 
    This matches the 14-ticker same-sector result, suggesting the stable pick is driven by the sector structure, not the specific universe size.
 
-3. **Eligible picks are rare and not obviously better.** Only `pct_picks_eligible` of ~1–5% passed every filter for most methods. The one clear eligible pick that produced a large loss was **FDX/UPS in window 23** (−10.7%, matching the earlier 14-ticker run's finding) — the same cautionary example recurs even in this smaller universe.
+3. **Eligible picks are rare and not obviously better.** Only percentage of ~1–5% passed every filter for most methods. The one clear eligible pick that produced a large loss was **FDX/UPS in window 23** (−10.7%, matching the earlier 14-ticker run's finding) — the same cautionary example recurs even in this smaller universe.
 
 4. **Composite's extra trades didn't help.** Composite made 76 trades (vs. 71 for distance/correlation) but had a lower Sharpe and the worst drawdown (−9.0%) of the non-eligible methods — again echoing the broader 14-ticker conclusion that added statistical filtering doesn't translate into better risk-adjusted returns.
-
-5. **Overall this run reproduces the 14-ticker finding almost one-for-one**, which is itself worth noting: restricting from 14 to 6 tickers (3 same-sector pairs only) barely changes the ranking or magnitude of results, reinforcing that the **sector constraint**, not universe size, is driving these effects.
 
 
 ## References
