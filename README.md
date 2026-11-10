@@ -151,7 +151,7 @@ python -m pairs --start 2012-01-01 --walk-forward
 python -m pairs --source synthetic --synthetic-days 2500 --walk-forward
 
 # Only test pairs within the same sector (recommended)
-python -m pairs --start 2012-01-01 --walk-forward --same-sector
+python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out results/sector_14
 python -m pairs --tickers ... --sector-file sectors.csv   # CSV columns: ticker,sector
 
 pytest -q
