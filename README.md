@@ -1,7 +1,7 @@
 # trade_pairs
 
 ## Abstract
-
+This project tests whether cointegration-based pair selection (Engle–Granger and Johansen) outperforms simpler distance and correlation methods out of sample. Using daily prices for 14 US large-cap stocks from 2012 to 2026, every method is evaluated under an identical trading rule, so that differences in performance arise only from pair selection. Performance is assessed by walk-forward validation over 25 trading windows, with Benjamini–Hochberg correction for multiple testing and bootstrap confidence intervals. Two candidate sets are compared: pairs restricted to the same sector (7 pairs) and all possible pairs (91). No method achieves a Sharpe ratio reliably above zero. Within the same sector the methods cannot be distinguished, but across all pairs the cointegration methods select cross-sector pairs 85–87% of the time and underperform the distance method (Sharpe difference 0.69, 95% CI 0.11 to 1.29). None of the 19 pairs that pass Engle–Granger at the 5% level survives correction, which is consistent with false discoveries driving these selections. The results are limited by a small, hand-picked universe and a single parameter setting.
 
 ## Introduction
 
