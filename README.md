@@ -1,5 +1,7 @@
 # trade_pairs
 
+[![CI](https://github.com/kardoge/research_project_trade_pairs/actions/workflows/ci.yml/badge.svg)](https://github.com/kardoge/research_project_trade_pairs/actions/workflows/ci.yml)
+
 ## Abstract
 This project tests whether cointegration-based pair selection (Engle–Granger and Johansen) outperforms simpler distance and correlation methods out of sample. Using daily prices for 14 US large-cap stocks from 2012 to 2026, every method is evaluated under an identical trading rule, so that differences in performance arise only from pair selection. Performance is assessed by walk-forward validation over 25 trading windows, with Benjamini–Hochberg correction for multiple testing and bootstrap confidence intervals. Two candidate sets are compared: pairs restricted to the same sector (7 pairs) and all possible pairs (91). No method achieves a Sharpe ratio reliably above zero. Within the same sector the methods cannot be distinguished, but across all pairs the cointegration methods select cross-sector pairs 85–87% of the time and underperform the distance method (Sharpe difference 0.69, 95% CI 0.11 to 1.29). None of the 19 pairs that pass Engle–Granger at the 5% level survives correction, which is consistent with false discoveries driving these selections. The results are limited by a small, hand-picked universe and a single parameter setting.
 
@@ -157,30 +159,32 @@ ranks them, and picks the best pair. Each method is then judged **out of sample*
 ## Quick start
 
 ```bash
-pip install -r requirements.txt
+uv sync
 
 # Real data from Yahoo Finance (default universe: sector-matched US large caps)
-python -m pairs --start 2012-01-01 --end xxxxx --walk-forward --out xxxx
+uv run trade-pairs --start 2012-01-01 --end xxxxx --walk-forward --out xxxx
 
 # Your own tickers
-python -m pairs --tickers KO PEP XOM CVX V MA --start 2012-01-01 --end xxxx
+uv run trade-pairs --tickers KO PEP XOM CVX V MA --start 2012-01-01 --end xxxx
 
 # Your own data: a wide CSV with a date column and one price column per ticker
-python -m pairs --source csv --csv data/prices.csv
+uv run trade-pairs --source csv --csv data/prices.csv
 
 # Offline demo on a synthetic universe with known answers
-python -m pairs --source synthetic
+uv run trade-pairs --source synthetic
 
 # Add a rolling walk-forward comparison of the methods
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward
-python -m pairs --source synthetic --synthetic-days 2500 --walk-forward
+uv run trade-pairs --start 2012-01-01 --end 2026-10-31 --walk-forward
+uv run trade-pairs --source synthetic --synthetic-days 2500 --walk-forward
 
 # Only test pairs within the same sector (recommended)
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out xxxx
-python -m pairs --tickers ... --sector-file sectors.csv   # CSV columns: ticker,sector
+uv run trade-pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out xxxx
+uv run trade-pairs --tickers ... --sector-file sectors.csv   # CSV columns: ticker,sector
 
-pytest -q
+uv run pytest -q
 ```
+
+
 
 Results go to `output/`:
 
@@ -196,16 +200,17 @@ Results go to `output/`:
 | `walk_forward_returns.csv` | daily out-of-sample returns, one column per method |
 | `walk_forward.png` | out-of-sample equity curve for each method |
 
+### Development
+uv sync                                # install everything (exact versions from uv.lock)
+uv run pytest -q                       # tests
+uv run pre-commit install              # run ruff + mypy on every commit
+uv run pre-commit run --all-files      # run all checks manually
+CI runs ruff, mypy, pytest (with coverage) and a demo run on Python 3.11 and 3.13 for every PR
+
 ### Reproduceable Results
 
-Ensure consistent end dates when performing any of the analysis such as walk_forward on same sector. The following modules and their versions were used during this analysis:
-
-Python 3.13.5
-matplotlib==3.10.0
-yfinance==1.7.0
-
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out results/sector_14
-python -m pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --out results/all_pairs_14
+uv run trade-pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --same-sector --out results/sector_14
+uv run trade-pairs --start 2012-01-01 --end 2026-10-31 --walk-forward --out results/all_pairs_14
 
 ## Results
 
