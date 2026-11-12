@@ -1,0 +1,49 @@
+# Copy to .github/workflows/ci.yml in the main repo (Milestone 2).
+# Assumes Milestone 1 is done: pyproject.toml with a `dev` dependency group, and uv.lock committed.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install (exactly the versions in uv.lock)
+        run: uv sync --locked
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Type check
+        run: uv run mypy src
+
+      - name: Tests (offline, synthetic data only)
+        run: uv run pytest --cov=pairs --cov-report=term-missing
+
+      - name: Smoke-run the CLI
+        run: uv run trade-pairs --source synthetic --walk-forward --synthetic-days 1500 --no-plots --out ci_output
+
+      - name: Upload the demo output
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v7
+        with:
+          name: synthetic-output
+          path: ci_output/
