@@ -36,7 +36,7 @@ def same_sector_pairs(tickers, sectors: dict[str, str]) -> list[tuple[str, str]]
 
 
 def split_date(prices: pd.DataFrame, formation_frac: float) -> pd.Timestamp:
-    return prices.index[int(len(prices) * formation_frac)]
+    return pd.Timestamp(prices.index[int(len(prices) * formation_frac)])
 
 
 def analyse_pairs(
@@ -53,10 +53,9 @@ def analyse_pairs(
     economically related pairs means fewer chance fits and a milder
     multiple-testing correction.
     """
-    logp = np.log(prices[prices.index < split])
+    logp = prices[prices.index < split].apply(np.log)
     candidates = (
-        list(combinations(logp.columns, 2)) if sectors is None
-        else same_sector_pairs(logp.columns, sectors)
+        list(combinations(logp.columns, 2)) if sectors is None else same_sector_pairs(logp.columns, sectors)
     )
     if not candidates:
         raise ValueError("No candidate pairs to test (check the sector mapping).")
@@ -90,9 +89,7 @@ def analyse_pairs(
     # Testing many pairs guarantees some false positives; control the
     # false discovery rate with Benjamini-Hochberg. The doubled p-value is a
     # Bonferroni-style penalty for having tried both EG directions.
-    df["eg_pvalue_bh"] = multipletests(
-        np.minimum(2 * df["eg_pvalue"], 1.0), method="fdr_bh"
-    )[1]
+    df["eg_pvalue_bh"] = multipletests(np.minimum(2 * df["eg_pvalue"], 1.0), method="fdr_bh")[1]
 
     df["eligible"] = (
         (df["eg_pvalue_bh"] < alpha_level)
@@ -138,11 +135,11 @@ def compare_methods(
     cache: dict[str, dict] = {}
     detail = []
     for method in METHODS:
-        for rank, row in rank_by(table, method).head(top_k).iterrows():
+        for rank, (_, row) in enumerate(rank_by(table, method).head(top_k).iterrows(), start=1):
             if row["pair"] not in cache:
                 res = backtest_pair(logp[row["y"]], logp[row["x"]], split, **bt_kwargs)
                 cache[row["pair"]] = res.summary()
-            detail.append({"method": method, "rank": rank + 1, "pair": row["pair"], **cache[row["pair"]]})
+            detail.append({"method": method, "rank": rank, "pair": row["pair"], **cache[row["pair"]]})
     detail_df = pd.DataFrame(detail)
     summary = (
         detail_df.groupby("method", sort=False)

@@ -93,7 +93,7 @@ def backtest_pair(
     y, x = log_y[log_y.index >= split], log_x[log_x.index >= split]
     z = (spread(y, x, alpha, beta) - mu) / sd
 
-    pos = pd.Series(_positions(z.values, entry, exit, stop), index=z.index)
+    pos = pd.Series(_positions(z.to_numpy(), entry, exit, stop), index=z.index)
     if close_at_end:
         pos.iloc[-1] = 0.0
     held = pos.shift(1).fillna(0.0)  # trade at close, earn from next bar

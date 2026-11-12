@@ -69,10 +69,8 @@ def walk_forward(
     """
     n = len(prices)
     if formation_days + trading_days > n:
-        raise ValueError(
-            f"Need at least {formation_days + trading_days} days for one window, have {n}."
-        )
-    logp = np.log(prices)
+        raise ValueError(f"Need at least {formation_days + trading_days} days for one window, have {n}.")
+    logp = prices.apply(np.log)
     methods = [*METHODS, ELIGIBLE_ONLY]
     daily: dict[str, list[pd.Series]] = {m: [] for m in methods}
     window_rows, pick_rows = [], []
@@ -98,8 +96,13 @@ def walk_forward(
                 res = cache[row["pair"]]
                 pair_rets.append(res.returns)
                 pick_rows.append(
-                    {"window": w, "method": method, "pair": row["pair"],
-                     "eligible": bool(row["eligible"]), **res.summary()}
+                    {
+                        "window": w,
+                        "method": method,
+                        "pair": row["pair"],
+                        "eligible": bool(row["eligible"]),
+                        **res.summary(),
+                    }
                 )
             # Unused slots sit in cash, so fewer picks means less exposure.
             if pair_rets:
@@ -108,9 +111,15 @@ def walk_forward(
                 block = pd.Series(0.0, index=trade_idx)
             daily[method].append(block)
             window_rows.append(
-                {"window": w, "trade_start": trade_idx[0].date(), "trade_end": trade_idx[-1].date(),
-                 "method": method, "n_pairs": len(pair_rets),
-                 "pairs": ", ".join(chosen["pair"]), **_perf(block)}
+                {
+                    "window": w,
+                    "trade_start": trade_idx[0].date(),
+                    "trade_end": trade_idx[-1].date(),
+                    "method": method,
+                    "n_pairs": len(pair_rets),
+                    "pairs": ", ".join(chosen["pair"]),
+                    **_perf(block),
+                }
             )
 
     returns = pd.DataFrame({m: pd.concat(daily[m]) for m in methods})

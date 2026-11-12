@@ -73,7 +73,7 @@ def test_same_sector_only_tests_pairs_within_a_sector(prices):
     sectors = {t: t[0] for t in prices.columns}
     table = analyse_pairs(prices, split_date(prices, 0.67), sectors=sectors)
     assert len(table) == 6  # A1-A2, B1-B2, C1-C2 and the three D pairs
-    assert all(sectors[y] == sectors[x] for y, x in zip(table["y"], table["x"]))
+    assert all(sectors[y] == sectors[x] for y, x in zip(table["y"], table["x"], strict=True))
     assert {table.iloc[0]["y"], table.iloc[0]["x"]} == {"A1", "A2"}
 
 
@@ -105,8 +105,21 @@ def test_compare_methods_shape(prices, table):
 
 
 def test_cli_same_sector_walk_forward(tmp_path):
-    main(["--source", "synthetic", "--same-sector", "--walk-forward", "--formation-days", "500",
-          "--trading-days", "250", "--no-plots", "--out", str(tmp_path)])
+    main(
+        [
+            "--source",
+            "synthetic",
+            "--same-sector",
+            "--walk-forward",
+            "--formation-days",
+            "500",
+            "--trading-days",
+            "250",
+            "--no-plots",
+            "--out",
+            str(tmp_path),
+        ]
+    )
     picks = pd.read_csv(tmp_path / "walk_forward_picks.csv")
     assert all(p.split("/")[0][0] == p.split("/")[1][0] for p in picks["pair"])
 

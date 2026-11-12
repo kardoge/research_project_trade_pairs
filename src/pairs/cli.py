@@ -15,13 +15,20 @@ from .walkforward import best_pair_history, walk_forward
 
 # Sector of each default ticker; used by --same-sector.
 DEFAULT_SECTORS = {
-    "KO": "beverages", "PEP": "beverages",
-    "XOM": "oil", "CVX": "oil",
-    "V": "payments", "MA": "payments",
-    "HD": "home_improvement", "LOW": "home_improvement",
-    "JPM": "banks", "BAC": "banks",
-    "GOOGL": "tech", "MSFT": "tech",
-    "UPS": "parcel", "FDX": "parcel",
+    "KO": "beverages",
+    "PEP": "beverages",
+    "XOM": "oil",
+    "CVX": "oil",
+    "V": "payments",
+    "MA": "payments",
+    "HD": "home_improvement",
+    "LOW": "home_improvement",
+    "JPM": "banks",
+    "BAC": "banks",
+    "GOOGL": "tech",
+    "MSFT": "tech",
+    "UPS": "parcel",
+    "FDX": "parcel",
 }
 DEFAULT_TICKERS = list(DEFAULT_SECTORS)
 
@@ -33,26 +40,41 @@ def parse_args(argv=None):
     p.add_argument("--start", default="2018-01-01")
     p.add_argument("--end", default=None)
     p.add_argument("--csv", help="wide CSV of prices (date column + one column per ticker)")
-    p.add_argument("--formation-frac", type=float, default=0.67,
-                   help="share of history used for selection; the rest is out-of-sample")
+    p.add_argument(
+        "--formation-frac",
+        type=float,
+        default=0.67,
+        help="share of history used for selection; the rest is out-of-sample",
+    )
     p.add_argument("--top-k", type=int, default=3, help="pairs each method selects")
     p.add_argument("--entry", type=float, default=2.0)
     p.add_argument("--exit", type=float, default=0.5)
     p.add_argument("--stop", type=float, default=4.0)
     p.add_argument("--cost-bps", type=float, default=5.0)
-    p.add_argument("--walk-forward", action="store_true",
-                   help="also run a rolling walk-forward comparison of the methods")
-    p.add_argument("--formation-days", type=int, default=504,
-                   help="walk-forward: days used to select pairs in each window (~2 years)")
-    p.add_argument("--trading-days", type=int, default=126,
-                   help="walk-forward: days traded before re-selecting (~6 months)")
-    p.add_argument("--same-sector", action="store_true",
-                   help="only test pairs within the same sector")
-    p.add_argument("--sector-file",
-                   help="CSV with columns ticker,sector (implies --same-sector); "
-                        "defaults to the built-in map for the default tickers")
-    p.add_argument("--synthetic-days", type=int, default=1000,
-                   help="length of the synthetic universe")
+    p.add_argument(
+        "--walk-forward",
+        action="store_true",
+        help="also run a rolling walk-forward comparison of the methods",
+    )
+    p.add_argument(
+        "--formation-days",
+        type=int,
+        default=504,
+        help="walk-forward: days used to select pairs in each window (~2 years)",
+    )
+    p.add_argument(
+        "--trading-days",
+        type=int,
+        default=126,
+        help="walk-forward: days traded before re-selecting (~6 months)",
+    )
+    p.add_argument("--same-sector", action="store_true", help="only test pairs within the same sector")
+    p.add_argument(
+        "--sector-file",
+        help="CSV with columns ticker,sector (implies --same-sector); "
+        "defaults to the built-in map for the default tickers",
+    )
+    p.add_argument("--synthetic-days", type=int, default=1000, help="length of the synthetic universe")
     p.add_argument("--out", default="output")
     p.add_argument("--no-plots", action="store_true")
     return p.parse_args(argv)
@@ -73,7 +95,7 @@ def load_sectors(args, tickers) -> dict[str, str] | None:
         return None
     if args.sector_file:
         df = pd.read_csv(args.sector_file)
-        sectors = dict(zip(df["ticker"].astype(str), df["sector"].astype(str)))
+        sectors = dict(zip(df["ticker"].astype(str), df["sector"].astype(str), strict=True))
     elif args.source == "synthetic":
         sectors = {t: t[0] for t in tickers}  # A1/A2 -> "A", etc.
     else:
@@ -106,8 +128,18 @@ def plot_best(prices, best, split, result, path: Path):
         axes[1].axhline(lvl, color="tab:red", ls=":", lw=1)
     axes[1].axhline(0, color="grey", lw=0.8)
     lo, hi = min(z.min(), -2.5), max(z.max(), 2.5)
-    axes[1].fill_between(z.index, lo, hi, where=(result.position > 0).values, alpha=0.15, color="tab:green", label="long spread")
-    axes[1].fill_between(z.index, lo, hi, where=(result.position < 0).values, alpha=0.15, color="tab:red", label="short spread")
+    axes[1].fill_between(
+        z.index,
+        lo,
+        hi,
+        where=(result.position > 0).values,
+        alpha=0.15,
+        color="tab:green",
+        label="long spread",
+    )
+    axes[1].fill_between(
+        z.index, lo, hi, where=(result.position < 0).values, alpha=0.15, color="tab:red", label="short spread"
+    )
     axes[1].legend(loc="upper left")
     axes[1].set_title("Out-of-sample spread z-score and positions")
 
@@ -140,12 +172,15 @@ def plot_walk_forward(returns: pd.DataFrame, path: Path):
 
 
 def run_walk_forward(prices, args, bt, out: Path, sectors):
-    print(f"\nWalk-forward: {args.formation_days}-day formation, {args.trading_days}-day trading blocks, "
-          f"top {args.top_k} pairs per method")
-    wf = walk_forward(prices, args.formation_days, args.trading_days, top_k=args.top_k,
-                      sectors=sectors, **bt)
+    print(
+        f"\nWalk-forward: {args.formation_days}-day formation, {args.trading_days}-day trading blocks, "
+        f"top {args.top_k} pairs per method"
+    )
+    wf = walk_forward(prices, args.formation_days, args.trading_days, top_k=args.top_k, sectors=sectors, **bt)
     history = best_pair_history(wf)
-    with pd.option_context("display.width", 200, "display.max_columns", 20, "display.float_format", "{:.3f}".format):
+    with pd.option_context(
+        "display.width", 200, "display.max_columns", 20, "display.float_format", "{:.3f}".format
+    ):
         print("\nWalk-forward method comparison (all trading blocks joined):")
         print(wf.summary.to_string())
         print("\nComposite top pick in each window:")
@@ -164,19 +199,38 @@ def main(argv=None):
     if prices.shape[1] < 2:
         raise SystemExit("Need at least two tickers with data.")
     split = split_date(prices, args.formation_frac)
-    print(f"Universe: {prices.shape[1]} tickers, {len(prices)} days "
-          f"({prices.index[0].date()} → {prices.index[-1].date()}); split at {split.date()}\n")
+    print(
+        f"Universe: {prices.shape[1]} tickers, {len(prices)} days "
+        f"({prices.index[0].date()} → {prices.index[-1].date()}); split at {split.date()}\n"
+    )
 
     sectors = load_sectors(args, list(prices.columns))
-    n_pairs = len(same_sector_pairs(prices.columns, sectors)) if sectors else prices.shape[1] * (prices.shape[1] - 1) // 2
+    n_pairs = (
+        len(same_sector_pairs(prices.columns, sectors))
+        if sectors
+        else prices.shape[1] * (prices.shape[1] - 1) // 2
+    )
     print(f"Testing {n_pairs} candidate pairs" + (" (same sector only)" if sectors else "") + "\n")
     table = analyse_pairs(prices, split, sectors=sectors)
     bt = dict(entry=args.entry, exit=args.exit, stop=args.stop, cost_bps=args.cost_bps)
     summary, detail = compare_methods(prices, table, split, top_k=args.top_k, **bt)
 
-    cols = ["pair", "eligible", "score", "eg_pvalue", "eg_pvalue_bh", "johansen_ratio",
-            "half_life", "hurst", "crossings_per_yr", "return_corr", "ssd"]
-    with pd.option_context("display.width", 200, "display.max_columns", 20, "display.float_format", "{:.3f}".format):
+    cols = [
+        "pair",
+        "eligible",
+        "score",
+        "eg_pvalue",
+        "eg_pvalue_bh",
+        "johansen_ratio",
+        "half_life",
+        "hurst",
+        "crossings_per_yr",
+        "return_corr",
+        "ssd",
+    ]
+    with pd.option_context(
+        "display.width", 200, "display.max_columns", 20, "display.float_format", "{:.3f}".format
+    ):
         print("Pair statistics (formation window), best first:")
         print(table[cols].head(15).to_string(index=False))
         print(f"\nMethod comparison — top {args.top_k} pairs each, out-of-sample:")
@@ -186,10 +240,14 @@ def main(argv=None):
     logp = np.log(prices)
     result = backtest_pair(logp[best["y"]], logp[best["x"]], split, **bt)
     print(f"\nBest pair: {best['pair']}  (long 1 {best['y']} / short {best['beta']:.2f} {best['x']})")
-    print(f"  EG p={best['eg_pvalue']:.4f} (BH {best['eg_pvalue_bh']:.4f}), Johansen ratio "
-          f"{best['johansen_ratio']:.2f}, half-life {best['half_life']:.1f}d, Hurst {best['hurst']:.2f}")
-    print(f"  Out-of-sample: Sharpe {result.sharpe:.2f}, return {result.total_return:.1%}, "
-          f"max DD {result.max_drawdown:.1%}, {result.n_trades} trades")
+    print(
+        f"  EG p={best['eg_pvalue']:.4f} (BH {best['eg_pvalue_bh']:.4f}), Johansen ratio "
+        f"{best['johansen_ratio']:.2f}, half-life {best['half_life']:.1f}d, Hurst {best['hurst']:.2f}"
+    )
+    print(
+        f"  Out-of-sample: Sharpe {result.sharpe:.2f}, return {result.total_return:.1%}, "
+        f"max DD {result.max_drawdown:.1%}, {result.n_trades} trades"
+    )
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

@@ -4,3 +4,6 @@ __pycache__/
 output/
 data/*.csv
 .venv/
+*.egg-info/
+build/
+dist/

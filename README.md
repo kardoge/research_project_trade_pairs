@@ -7,9 +7,9 @@ This project tests whether cointegration-based pair selection (Engle–Granger a
 
 The concept of pairs trading, of which two related stocks are chosen based on appropriate modelling and forecasting of their time series data and an appropriate choice of distance measure to observe relative departures from their equilibrium, can create a relatively successful trading strategy through statistical arbitrage as a long/short dollar-neutral portfolio is chosen<sup>1</sup>. Huck and Afawubo (2015) evaluate whether cointegration selects better pairs than the common distance method, and report high, stable returns that are robust to transaction costs. The purpose of this project is to compare such methods performed on historical data and assess reproducibility across aggregated pricing data.
 
-### Pairs Selection 
+### Pairs Selection
 
-### 1. Minimum distance method: 
+### 1. Minimum distance method:
 
 • Normalise each stock's total-return price to $1 at the start of the formation period.
 • For every pair, compute the sum of squared differences (SSD) between the normalised prices:
@@ -196,7 +196,7 @@ Results go to `output/`:
 | `walk_forward_returns.csv` | daily out-of-sample returns, one column per method |
 | `walk_forward.png` | out-of-sample equity curve for each method |
 
-### Reproduceable Results 
+### Reproduceable Results
 
 Ensure consistent end dates when performing any of the analysis such as walk_forward on same sector. The following modules and their versions were used during this analysis:
 
@@ -258,5 +258,3 @@ single parameter setting, and a simplified cost model. See the roadmap for next 
 ## References
 
 1. Huck N, Afawubo K. Pairs trading and selection methods: is cointegration superior? Appl Econ. 2015;47(6):599–613. doi:10.1080/00036846.2014.975417
-
-

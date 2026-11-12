@@ -39,7 +39,7 @@ def johansen_trace_ratio(y: pd.Series, x: pd.Series) -> float:
     with warnings.catch_warnings():
         # statsmodels emits spurious ComplexWarnings from the eigen-solver
         warnings.simplefilter("ignore", np.exceptions.ComplexWarning)
-        res = coint_johansen(np.column_stack([y.values, x.values]), det_order=0, k_ar_diff=1)
+        res = coint_johansen(np.column_stack([y.to_numpy(), x.to_numpy()]), det_order=0, k_ar_diff=1)
     return float(res.lr1[0] / res.cvt[0, 1])
 
 
@@ -65,7 +65,7 @@ def hurst_exponent(s: pd.Series, max_lag: int = 20) -> float:
     H < 0.5 mean-reverting, H = 0.5 random walk, H > 0.5 trending. Short
     lags keep the estimate stable on a few years of daily data.
     """
-    v = s.values
+    v = s.to_numpy()
     lags = np.arange(2, min(max_lag, len(v) // 4))
     tau = np.array([np.std(v[lag:] - v[:-lag]) for lag in lags])
     ok = tau > 0
@@ -74,7 +74,7 @@ def hurst_exponent(s: pd.Series, max_lag: int = 20) -> float:
 
 def zero_crossings_per_year(s: pd.Series, periods_per_year: int = 252) -> float:
     """How often the demeaned spread crosses zero — a proxy for trade count."""
-    d = np.sign(s.values - s.values.mean())
+    d = np.sign(s.to_numpy() - s.to_numpy().mean())
     crossings = np.count_nonzero(d[1:] != d[:-1])
     return crossings * periods_per_year / len(s)
 
