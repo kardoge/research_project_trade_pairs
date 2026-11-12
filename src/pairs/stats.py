@@ -3,7 +3,7 @@
 Everything works on log prices: a spread of log prices is a portfolio whose
 weights are stable as prices move, and hedge ratios become elasticities.
 """
-import os
+
 from __future__ import annotations
 
 import warnings
