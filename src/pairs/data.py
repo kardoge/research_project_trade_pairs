@@ -79,4 +79,4 @@ def synthetic_universe(n_days: int = 1000, seed: int = 7) -> pd.DataFrame:
     for name in ("D1", "D2", "D3"):
         logp[name] = 3.0 + rng.uniform(0, 1) + walk()
 
-    return np.exp(pd.DataFrame(logp, index=idx))
+    return pd.DataFrame({name: np.exp(lp) for name, lp in logp.items()}, index=idx)
